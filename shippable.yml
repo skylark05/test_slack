@@ -1,0 +1,95 @@
+resources:
+
+ - name: ci-channel
+   type: notification
+   integration: Slack
+   versionTemplate:
+     recipients:
+       - "#ci"
+
+ #
+ # Docker image repositories
+ # INFO : Make sure that the name of the resource matches
+ #        what you expect the image to be tagged with.
+ #
+
+
+ - name: r1
+   type: gitRepo
+   integration: github
+   versionTemplate:
+     sourceName: skylark05/test_684_ruby
+     branch: master
+     buildOnCommit: true
+     buildOnPullRequest: true
+
+ - name: r2
+   type: gitRepo
+   integration: github
+   versionTemplate:
+     sourceName: skylark05/test_684_ruby
+     branch: master
+     buildOnCommit: true
+     buildOnPullRequest: true
+
+ - name: r3
+   type: gitRepo
+   integration: github
+   versionTemplate:
+     sourceName: skylark05/test_684_ruby
+     branch: master
+     buildOnCommit: true
+     buildOnPullRequest: true
+
+ - name: r4
+   type: gitRepo
+   integration: github
+   versionTemplate:
+     sourceName: skylark05/test_684_ruby
+     buildOnCommit: true
+     buildOnPullRequest: true
+
+ - name: r5
+   type: gitRepo
+   integration: github
+   versionTemplate:
+     sourceName: skylark05/test_684_ruby
+     buildOnCommit: true
+     buildOnPullRequest: true
+
+jobs:
+ - name: builder
+   type: runSh
+   dependencyMode: immediate
+   steps:
+     - IN: r1
+       showBuildStatus:  true
+     - IN: r2
+       showBuildStatus:  true
+     - IN: r3
+       showBuildStatus:  true
+     - IN: r4
+       showBuildStatus:  true
+     - IN: r5
+       showBuildStatus:  true
+     - TASK:
+         name: build_docker_image
+         runtime:
+           options:
+             env:
+               - DOCKER_REGISTRY: foo
+         script:
+           - DOCKER_IMAGE_NAME=${JOB_TRIGGERED_BY_NAME}
+   on_success:
+     script:
+       - >
+         if [[ "$IS_PULL_REQUEST" = "true" ]]; then
+           echo "Successfully built docker image."
+         else
+           echo "Successfully built and published docker image."
+         fi;
+     NOTIFY:
+       - name: ci-channel
+   on_failure:
+     script:
+       - echo "Failed to publish docker image."
